@@ -50,8 +50,8 @@ def game():
     if "history" not in session:
         session["history"] = [copy.deepcopy(session["board"])]
     if session["computer"] == session["turn"]:
-        values = minimax(session["board"], session["computer"])
-        row, column = values[1]
+        values = make_move(session["board"], session["computer"])
+        row, column = values
         return redirect(url_for('play', row = row, column = column))
     
     return render_template("game.html", game=session["board"], turn=session["turn"], history=session["history"])
@@ -67,8 +67,8 @@ def play(row, column):
         return render_template("game.html", game=session["board"], turn=session["turn"], draw = True, history=session["history"])
     session["turn"] = move(session["turn"])
     if session["computer"] == session["turn"]:
-        values = minimax(session["board"], session["computer"])
-        row, column = values[1]
+        values = make_move(session["board"], session["computer"])
+        row, column = values
         return redirect(url_for('play', row = row, column = column))
     return render_template("game.html", game=session["board"], turn=session["turn"], win=False, history=session["history"])
 
@@ -120,33 +120,6 @@ def start():
     return render_template("start.html", start = "opponent")
 
 
-def computer_move(board):
-    for line in WINS:
-        if board[line[0][0]][line[0][1]] == board[line[1][0]][line[1][1]] == session["computer"]:
-            if board[line[2][0]][line[2][1]] == None:
-                return line[2]
-        elif board[line[0][0]][line[0][1]] == board[line[2][0]][line[2][1]] == session["computer"]:
-            if board[line[1][0]][line[1][1]] == None:
-                return line[1]
-        elif board[line[2][0]][line[2][1]] == board[line[1][0]][line[1][1]] == session["computer"]:
-            if board[line[0][0]][line[0][1]] == None:
-                return line[0]
-
-    for line in WINS: 
-        if board[line[0][0]][line[0][1]] == board[line[1][0]][line[1][1]] == session["player"]:
-            if board[line[2][0]][line[2][1]] == None:
-                return line[2]
-        elif board[line[0][0]][line[0][1]] == board[line[2][0]][line[2][1]] == session["player"]:
-            if board[line[1][0]][line[1][1]] == None:
-                return line[1]
-        elif board[line[2][0]][line[2][1]] == board[line[1][0]][line[1][1]] == session["player"]:
-            if board[line[0][0]][line[0][1]] == None:
-                return line[0]
-
-    moves = ((0,0), (2,2), (0,2), (2,0), (1,1), (0,1), (1,0), (1,2), (2,1))
-    for line in moves:
-        if board[line[0]][line[1]] == None:
-            return line
 
 def check_win1(board):
     for line in WINS:
@@ -154,61 +127,66 @@ def check_win1(board):
             return board[line[0][0]][line[0][1]]
 
 
-def minimax (game, turn):
+def minimax (game, turn, depth=0):
     result = check_win1(game)
-    if result == "X" or result == "O":
-        if result == "X":
-            return (1,())
-        elif result == "O":
-            return (-1,())
+    if result == "X":
+        return 10-depth
+    elif result == "O":
+        return -10+depth
     elif check_draw(game):
-        return (0,())
+        return 0
     
-    game = copy.deepcopy(game)
     moves = []
     for i in range(3):
         for j in range(3):
             if game[i][j] == None:
                 moves.append((i, j))
-                
 
-    win = []
-    even = []
-    lose = []
     if turn == "X":
-        value = -1
+        value = -10
         for move in moves:
-            game1 = copy.deepcopy(game)
-            game1[move[0]][move[1]] = turn
-            value1 = minimax(game1, "O")
-
-            value = max(value, value1[0])
-            if value == 1:
-                win.append(move)
-            elif value == 0:
-                even.append(move)
-            else:
-                lose.append(move)
+            game[move[0]][move[1]] = turn
+            move_value = minimax(game, "O", depth-1)
+            value = max(value, move_value)
+            game[move[0]][move[1]] = None
 
     if turn == "O":
-        value = 1
+        value = 10
         for move in moves:
-            game1 = copy.deepcopy(game)
-            game1[move[0]][move[1]] = turn
-            value1 = minimax(game1, "X")
+            game[move[0]][move[1]] = turn
+            move_value = minimax(game, "X", depth-1)
+            value = min(value, move_value)
+            game[move[0]][move[1]] = None
 
-            value = min(value, value1[0])
-            if value == -1:
-                win.append(move)
-            elif value == 0:
-                even.append(move)
-            else:
-                lose.append(move)
+    return value
 
-    if len(win) > 0:
-        return (value, win[0])
-    elif len(even) > 0:
-        return (value, even[0])
-    else:
-        return (value, lose[0])
-    
+def make_move(game, turn):
+    moves = []
+    for i in range(3):
+        for j in range(3):
+            if game[i][j] == None:
+                moves.append((i, j))
+    values=[]
+    for move in moves:
+        game[move[0]][move[1]] = turn
+        if turn == "X":
+            value = minimax(game,"O")
+        elif turn =="O":
+            value = minimax(game,"X")          
+        values.append(value)
+        game[move[0]][move[1]] = None
+
+    if turn == "X":
+        if max(values) > 0:
+            return moves[values.index(max(values))]
+        elif max(values) == 0:
+            return moves[values.index(0)]
+        else:
+            return moves[values.index(max(values))]
+    if turn == "O":
+        if min(values) < 0:
+            return moves[values.index(min(values))]
+        elif min(values) == 0:
+            return moves[values.index(0)]
+        else:
+            return moves[values.index(min(values))]
