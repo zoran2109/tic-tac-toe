@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tic Tac Toe</title>
+    </head>
+    <style>
+        body {
+            text-align: center;
+            font-size: 50px;
+            font-family: verdana;
+        }
+        button {
+            height: 300px;
+            width: 300px;
+            font-size: 40px;
+            font-family: verdana;
+        }
+        .control {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin: auto;
+        }
+    </style>    
+
+    <body>
+        {% if start == "opponent" %}
+            <p>Choose opponent:</p>
+            <div class="control">
+            <form action="/game" method="get">
+                <button type="submit" name="submit-button">Play vs. Human</button>
+            </form>
+            <form action="/" value="side" method="post">
+                <button type="submit" name="submit-button" value="computer">Play vs. Computer</button>
+            </form>
+            </div>
+        {% elif start == "side"%}
+            <p>Choose side:</p>
+            <div class="control">
+            <form action="/" method="post">
+                <button type="submit" name="submit-button" value="X">X</button>
+            </form>
+            <form action="/" method="post">
+                <button type="submit" name="submit-button" value="O">O</button>
+            </form>
+            </div>
+        {% endif %}
+
+    </body>
+</html>
