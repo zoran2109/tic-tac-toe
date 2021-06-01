@@ -3,7 +3,9 @@
     <head>
         <title>Tic Tac Toe</title>
     </head>
+    <meta name="viewport" content="width=device-width initial-scale=1">
     <style>
+
         body {
             text-align: center;
             font-size: 50px;
@@ -20,6 +22,11 @@
             flex-direction: row;
             justify-content: center;
             margin: auto;
+        }
+        @media(max-width: 599px) {
+            .control {
+                flex-direction: column;
+            }
         }
     </style>    
 
